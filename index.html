@@ -1,0 +1,1357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mini Google – Search Evolution</title>
+  <style>
+    /* ============================================================
+       RESET & BASE
+    ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue:   #1a73e8;
+      --red:    #ea4335;
+      --yellow: #fbbc04;
+      --green:  #34a853;
+      --purple: #7c3aed;
+      --bg:     #f8f9fa;
+      --card:   #ffffff;
+      --border: #e0e0e0;
+      --text:   #202124;
+      --muted:  #5f6368;
+      --shadow: 0 2px 12px rgba(0,0,0,.10);
+      --radius: 12px;
+      --transition: .22s ease;
+    }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    a { color: var(--blue); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ============================================================
+       HEADER / HERO
+    ============================================================ */
+    .hero {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%);
+      color: #fff;
+      padding: 48px 20px 56px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 30% 50%, rgba(26,115,232,.25) 0%, transparent 60%),
+                  radial-gradient(ellipse at 70% 30%, rgba(52,168,83,.15) 0%, transparent 55%);
+      pointer-events: none;
+    }
+    .logo-letters span { font-size: 3.6rem; font-weight: 800; letter-spacing: -2px; }
+    .logo-letters span:nth-child(1) { color: #4285f4; }
+    .logo-letters span:nth-child(2) { color: #ea4335; }
+    .logo-letters span:nth-child(3) { color: #fbbc04; }
+    .logo-letters span:nth-child(4) { color: #4285f4; }
+    .logo-letters span:nth-child(5) { color: #34a853; }
+    .logo-letters span:nth-child(6) { color: #ea4335; }
+
+    .hero-sub {
+      font-size: 1rem;
+      color: rgba(255,255,255,.65);
+      margin-top: 6px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .hero h2 {
+      font-size: 1.5rem;
+      font-weight: 400;
+      margin-top: 20px;
+      color: rgba(255,255,255,.85);
+    }
+    .era-badges {
+      display: flex;
+      justify-content: center;
+      gap: 14px;
+      margin-top: 18px;
+      flex-wrap: wrap;
+    }
+    .era-badge {
+      padding: 6px 18px;
+      border-radius: 999px;
+      font-size: .8rem;
+      font-weight: 600;
+      letter-spacing: .5px;
+    }
+    .era-badge.old  { background: rgba(234,67,53,.2); border: 1px solid rgba(234,67,53,.5); color: #ff8a80; }
+    .era-badge.new  { background: rgba(52,168,83,.2); border: 1px solid rgba(52,168,83,.5); color: #69f0ae; }
+
+    /* ============================================================
+       MAIN CONTAINER
+    ============================================================ */
+    .container {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 0 20px 60px;
+    }
+
+    /* ============================================================
+       SEARCH BAR
+    ============================================================ */
+    .search-box-wrap {
+      background: var(--card);
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+      padding: 32px 36px;
+      margin: -32px auto 36px;
+      max-width: 740px;
+      position: relative;
+      z-index: 10;
+    }
+    .search-input-row {
+      display: flex;
+      gap: 10px;
+    }
+    .search-input {
+      flex: 1;
+      padding: 14px 20px;
+      border: 2px solid var(--border);
+      border-radius: 999px;
+      font-size: 1.05rem;
+      outline: none;
+      transition: border-color var(--transition), box-shadow var(--transition);
+    }
+    .search-input:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 4px rgba(26,115,232,.12);
+    }
+    .btn-search {
+      padding: 14px 28px;
+      background: var(--blue);
+      color: #fff;
+      border: none;
+      border-radius: 999px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background var(--transition), transform var(--transition);
+    }
+    .btn-search:hover { background: #1557b0; transform: scale(1.03); }
+
+    .mode-row {
+      display: flex;
+      gap: 14px;
+      margin-top: 18px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .mode-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 22px;
+      border-radius: 999px;
+      border: 2px solid var(--border);
+      background: var(--bg);
+      cursor: pointer;
+      font-size: .9rem;
+      font-weight: 600;
+      transition: all var(--transition);
+    }
+    .mode-btn .dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+    }
+    .mode-btn.old-mode   .dot { background: var(--red); }
+    .mode-btn.rank-mode  .dot { background: var(--green); }
+    .mode-btn.active.old-mode  { border-color: var(--red);   background: rgba(234,67,53,.08);  color: var(--red); }
+    .mode-btn.active.rank-mode { border-color: var(--green); background: rgba(52,168,83,.08);  color: #1e7e34; }
+    .suggestions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+      justify-content: center;
+    }
+    .suggestion-chip {
+      padding: 5px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      font-size: .82rem;
+      cursor: pointer;
+      transition: all var(--transition);
+      color: var(--muted);
+    }
+    .suggestion-chip:hover { border-color: var(--blue); color: var(--blue); background: rgba(26,115,232,.06); }
+
+    /* ============================================================
+       SECTION HEADERS
+    ============================================================ */
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 40px 0 20px;
+    }
+    .section-header h2 {
+      font-size: 1.3rem;
+      font-weight: 700;
+    }
+    .section-icon {
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+    .icon-blue   { background: rgba(26,115,232,.12); }
+    .icon-green  { background: rgba(52,168,83,.12); }
+    .icon-purple { background: rgba(124,58,237,.12); }
+    .icon-yellow { background: rgba(251,188,4,.15); }
+
+    /* ============================================================
+       RESULTS PANELS
+    ============================================================ */
+    .results-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+    @media (max-width: 760px) { .results-grid { grid-template-columns: 1fr; } }
+
+    .results-panel {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .panel-header {
+      padding: 16px 22px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .panel-header .panel-title { font-weight: 700; font-size: 1rem; }
+    .panel-header .panel-desc  { font-size: .78rem; color: var(--muted); margin-left: auto; }
+    .old-panel  .panel-header { background: rgba(234,67,53,.05); }
+    .rank-panel .panel-header { background: rgba(52,168,83,.05); }
+
+    .result-list { padding: 10px 0; }
+
+    .result-item {
+      padding: 14px 22px;
+      border-bottom: 1px solid rgba(0,0,0,.04);
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      transition: background var(--transition);
+      cursor: pointer;
+    }
+    .result-item:last-child { border-bottom: none; }
+    .result-item:hover { background: rgba(0,0,0,.025); }
+
+    .rank-badge {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800;
+      font-size: .9rem;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .old-panel  .rank-badge { background: rgba(234,67,53,.12); color: var(--red); }
+    .rank-panel .rank-badge { background: rgba(52,168,83,.12); color: var(--green); }
+
+    .result-body { flex: 1; min-width: 0; }
+    .result-url {
+      font-size: .78rem;
+      color: var(--green);
+      font-weight: 600;
+      margin-bottom: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .result-title { font-weight: 700; font-size: .97rem; color: var(--blue); margin-bottom: 4px; }
+    .result-snippet { font-size: .84rem; color: var(--muted); line-height: 1.5; }
+    .result-snippet .kw-highlight {
+      background: rgba(251,188,4,.35);
+      padding: 1px 3px;
+      border-radius: 3px;
+      font-weight: 600;
+      color: #6b4c00;
+    }
+    .result-meta {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 7px;
+    }
+    .meta-tag {
+      font-size: .73rem;
+      padding: 2px 10px;
+      border-radius: 999px;
+      font-weight: 600;
+    }
+    .meta-kw   { background: rgba(234,67,53,.08);  color: var(--red); }
+    .meta-pr   { background: rgba(52,168,83,.08);  color: #1e7e34; }
+    .meta-link { background: rgba(26,115,232,.08); color: var(--blue); }
+    .meta-spam { background: rgba(251,188,4,.2);   color: #7a5500; }
+
+    .no-results {
+      padding: 40px;
+      text-align: center;
+      color: var(--muted);
+      font-size: .95rem;
+    }
+
+    /* ============================================================
+       LINK GRAPH
+    ============================================================ */
+    .graph-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .graph-toolbar {
+      padding: 14px 22px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+    .graph-toolbar span { font-size: .84rem; color: var(--muted); }
+    .graph-legend {
+      display: flex;
+      gap: 14px;
+      margin-left: auto;
+      flex-wrap: wrap;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: .78rem;
+      color: var(--muted);
+    }
+    .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+    #graphSvg {
+      width: 100%;
+      height: 480px;
+      display: block;
+      background: #fafafa;
+      cursor: grab;
+    }
+    #graphSvg:active { cursor: grabbing; }
+
+    .node-info-panel {
+      padding: 18px 22px;
+      border-top: 1px solid var(--border);
+      background: rgba(26,115,232,.03);
+      min-height: 76px;
+      font-size: .88rem;
+    }
+    .node-info-panel strong { color: var(--blue); }
+
+    /* ============================================================
+       COMPARISON DASHBOARD
+    ============================================================ */
+    .comparison-table-wrap {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .88rem;
+    }
+    thead th {
+      padding: 14px 18px;
+      text-align: left;
+      background: #f1f3f4;
+      font-weight: 700;
+      font-size: .78rem;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      color: var(--muted);
+    }
+    tbody tr {
+      border-top: 1px solid var(--border);
+      transition: background var(--transition);
+    }
+    tbody tr:hover { background: rgba(0,0,0,.025); }
+    tbody td { padding: 13px 18px; vertical-align: middle; }
+
+    .change-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: .78rem;
+    }
+    .change-up   { background: rgba(52,168,83,.12); color: #1e7e34; }
+    .change-down { background: rgba(234,67,53,.12); color: var(--red); }
+    .change-same { background: rgba(0,0,0,.06);     color: var(--muted); }
+
+    .highlight-row { background: rgba(251,188,4,.08) !important; }
+
+    /* ============================================================
+       PAGERANK BARS
+    ============================================================ */
+    .pr-bar-wrap { display: flex; align-items: center; gap: 10px; }
+    .pr-bar-bg {
+      flex: 1;
+      height: 8px;
+      background: var(--border);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .pr-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--green), #0d6a37);
+      border-radius: 999px;
+      transition: width .6s ease;
+    }
+
+    /* ============================================================
+       EDUCATIONAL SECTION
+    ============================================================ */
+    .edu-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 22px;
+    }
+    .edu-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 26px;
+      border-top: 4px solid var(--border);
+      transition: transform var(--transition), box-shadow var(--transition);
+    }
+    .edu-card:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(0,0,0,.12); }
+    .edu-card.old-card  { border-top-color: var(--red); }
+    .edu-card.new-card  { border-top-color: var(--green); }
+    .edu-card.cmp-card  { border-top-color: var(--blue); }
+    .edu-card.vote-card { border-top-color: var(--yellow); }
+
+    .edu-card h3 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .edu-card p {
+      font-size: .88rem;
+      line-height: 1.65;
+      color: var(--muted);
+    }
+    .edu-example {
+      margin-top: 14px;
+      background: var(--bg);
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: .84rem;
+      border-left: 3px solid var(--blue);
+      line-height: 1.6;
+    }
+    .edu-example.bad  { border-left-color: var(--red); background: rgba(234,67,53,.04); }
+    .edu-example.good { border-left-color: var(--green); background: rgba(52,168,83,.04); }
+
+    /* ============================================================
+       PAGERANK VISUALISER
+    ============================================================ */
+    .pr-vis-wrap {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 28px;
+    }
+    .pr-vis-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 14px;
+      margin-top: 18px;
+    }
+    .pr-node-card {
+      border-radius: 10px;
+      border: 2px solid var(--border);
+      padding: 16px 14px;
+      text-align: center;
+      transition: all var(--transition);
+      cursor: pointer;
+    }
+    .pr-node-card:hover { border-color: var(--blue); box-shadow: 0 4px 16px rgba(26,115,232,.15); }
+    .pr-node-num {
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      background: var(--blue);
+      color: #fff;
+      font-weight: 800;
+      font-size: 1.1rem;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 10px;
+    }
+    .pr-node-domain { font-size: .72rem; color: var(--muted); margin-bottom: 6px; word-break: break-all; }
+    .pr-node-score  { font-size: 1.1rem; font-weight: 800; color: var(--blue); }
+    .pr-node-label  { font-size: .7rem; color: var(--muted); }
+
+    /* ============================================================
+       FOOTER
+    ============================================================ */
+    footer {
+      text-align: center;
+      padding: 30px 20px;
+      font-size: .82rem;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+      background: var(--card);
+    }
+    footer strong { color: var(--blue); }
+
+    /* ============================================================
+       ANIMATIONS
+    ============================================================ */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .fade-in { animation: fadeInUp .35s ease both; }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .spinner {
+      width: 28px; height: 28px;
+      border: 3px solid var(--border);
+      border-top-color: var(--blue);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      margin: 20px auto;
+    }
+
+    /* ============================================================
+       RESPONSIVE TWEAKS
+    ============================================================ */
+    @media (max-width: 600px) {
+      .logo-letters span { font-size: 2.4rem; }
+      .search-box-wrap   { padding: 20px 18px; }
+      .btn-search        { padding: 14px 18px; font-size: .9rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ============================================================
+     HERO
+============================================================ -->
+<header class="hero">
+  <div class="logo-letters">
+    <span>G</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span>
+  </div>
+  <div class="hero-sub">Search Engine Evolution · Educational Demo</div>
+  <h2>How did Google revolutionise search?</h2>
+  <div class="era-badges">
+    <span class="era-badge old">1990s: Keyword Counting</span>
+    <span class="era-badge new">1998: PageRank Algorithm</span>
+  </div>
+</header>
+
+<!-- ============================================================
+     SEARCH BOX
+============================================================ -->
+<div class="container">
+  <div class="search-box-wrap fade-in">
+    <div class="search-input-row">
+      <input id="searchInput" class="search-input"
+             type="text" placeholder="Search the mini web… try pizza, food, chai, biryani"
+             autocomplete="off" />
+      <button class="btn-search" onclick="runSearch()">Search</button>
+    </div>
+
+    <div class="mode-row">
+      <button id="btnOld"  class="mode-btn old-mode  active" onclick="setMode('old')">
+        <span class="dot"></span> Old Google (Keyword Count)
+      </button>
+      <button id="btnRank" class="mode-btn rank-mode"       onclick="setMode('rank')">
+        <span class="dot"></span> PageRank Google
+      </button>
+      <button id="btnBoth" class="mode-btn both-mode"       onclick="setMode('both')">
+        ⚡ Compare Both
+      </button>
+    </div>
+
+    <div class="suggestions">
+      <span style="font-size:.8rem;color:var(--muted);align-self:center;">Try:</span>
+      <span class="suggestion-chip" onclick="quickSearch('pizza')">🍕 pizza</span>
+      <span class="suggestion-chip" onclick="quickSearch('food')">🍴 food</span>
+      <span class="suggestion-chip" onclick="quickSearch('pune')">📍 pune</span>
+      <span class="suggestion-chip" onclick="quickSearch('chai')">☕ chai</span>
+      <span class="suggestion-chip" onclick="quickSearch('biryani')">🍛 biryani</span>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="resultsSection" style="display:none;">
+    <div class="section-header">
+      <div class="section-icon icon-blue">🔍</div>
+      <h2 id="resultsHeading">Search Results</h2>
+    </div>
+    <div class="results-grid" id="resultsGrid"></div>
+  </div>
+
+  <!-- ============================================================
+       LINK GRAPH
+  ============================================================ -->
+  <div class="section-header">
+    <div class="section-icon icon-purple">🕸️</div>
+    <h2>Hyperlink Network Graph</h2>
+  </div>
+  <div class="graph-card fade-in">
+    <div class="graph-toolbar">
+      <span>Click a website node to see its connections</span>
+      <div class="graph-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#1a73e8"></div> Website node</div>
+        <div class="legend-item">
+          <svg width="30" height="12" viewBox="0 0 30 12">
+            <defs>
+              <marker id="lgArrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                <path d="M0,0 L6,3 L0,6 Z" fill="#34a853"/>
+              </marker>
+            </defs>
+            <line x1="0" y1="6" x2="22" y2="6" stroke="#34a853" stroke-width="2" marker-end="url(#lgArrow)"/>
+          </svg>
+          Hyperlink
+        </div>
+        <div class="legend-item"><div class="legend-dot" style="background:#ea4335"></div> Highlighted</div>
+      </div>
+    </div>
+    <svg id="graphSvg" viewBox="0 0 760 480"></svg>
+    <div class="node-info-panel" id="nodeInfo">
+      ☝️ Click any website node above to inspect its links and PageRank score.
+    </div>
+  </div>
+
+  <!-- ============================================================
+       PAGERANK SCORES VISUALISER
+  ============================================================ -->
+  <div class="section-header">
+    <div class="section-icon icon-green">📊</div>
+    <h2>PageRank Scores (Computed)</h2>
+  </div>
+  <div class="pr-vis-wrap fade-in">
+    <p style="font-size:.88rem;color:var(--muted);">
+      Scores calculated iteratively using <strong>PR(A) = (1–d) + d × Σ(PR(T)/C(T))</strong> with damping factor d = 0.85, converged in &lt;100 iterations.
+    </p>
+    <div class="pr-vis-grid" id="prVisGrid"></div>
+  </div>
+
+  <!-- ============================================================
+       COMPARISON DASHBOARD
+  ============================================================ -->
+  <div class="section-header">
+    <div class="section-icon icon-yellow">⚖️</div>
+    <h2>Comparison Dashboard – Old vs PageRank</h2>
+  </div>
+  <div class="comparison-table-wrap fade-in" id="compDashboard"></div>
+
+  <!-- ============================================================
+       EDUCATIONAL SECTION
+  ============================================================ -->
+  <div class="section-header">
+    <div class="section-icon icon-blue">🎓</div>
+    <h2>Why Google Changed Search</h2>
+  </div>
+  <div class="edu-grid fade-in">
+
+    <div class="edu-card old-card">
+      <h3>🕰️ The Old Method: Keyword Stuffing</h3>
+      <p>Early search engines ranked pages simply by counting how many times a keyword appeared. This was easy to game — a spammer could repeat "pizza" 100 times on a blank page and outrank legitimate restaurants.</p>
+      <div class="edu-example bad">
+        <strong>🚨 Spam example:</strong><br>
+        <em>pizza pizza pizza pizza pizza pizza pizza pizza pizza pizza</em><br>
+        ➜ 10 keyword hits → ranks #1 (but totally useless!)
+      </div>
+    </div>
+
+    <div class="edu-card new-card">
+      <h3>🚀 PageRank: Votes from the Web</h3>
+      <p>Larry Page & Sergey Brin realised that a hyperlink from one website to another is like a recommendation. If many trusted sites link to you, you become important — just like academic citations in research papers.</p>
+      <div class="edu-example good">
+        <strong>✅ PageRank logic:</strong><br>
+        best-pizza-pune.com is linked to by 3 sites.<br>
+        ➜ High PageRank → ranks #1 (genuinely popular!)
+      </div>
+    </div>
+
+    <div class="edu-card cmp-card">
+      <h3>🔁 Iterative Convergence</h3>
+      <p>PageRank isn't calculated in one pass. The algorithm runs repeatedly — each iteration refines every page's score using updated neighbour scores — until values stop changing (convergence).</p>
+      <div class="edu-example">
+        <strong>Formula:</strong><br>
+        PR(A) = (1–0.85) + 0.85 × Σ(PR(T) / C(T))<br><br>
+        • <code>d = 0.85</code> — damping factor (probability user follows a link)<br>
+        • <code>PR(T)</code> — score of linking page<br>
+        • <code>C(T)</code> — total outbound links from T
+      </div>
+    </div>
+
+    <div class="edu-card vote-card">
+      <h3>⚖️ Not All Votes Are Equal</h3>
+      <p>A link from a high-PageRank page is worth more than a link from a low-ranked page. This mirrors real life — a recommendation from an expert matters more than one from an unknown source.</p>
+      <div class="edu-example">
+        <strong>Example in this dataset:</strong><br>
+        best-pizza-pune.com (site 2) has PR ≈ 1.6 and links to sites 1 & 3.<br>
+        ➜ Sites 1 & 3 inherit significant score from site 2.
+      </div>
+    </div>
+
+  </div>
+
+</div><!-- /container -->
+
+<!-- ============================================================
+     FOOTER
+============================================================ -->
+<footer>
+  <strong>Mini Google</strong> · Search Engine Evolution Demo ·
+  Built with HTML5, CSS3 & Vanilla JS · No external libraries ·
+  PageRank algorithm computed entirely in the browser
+</footer>
+
+<!-- ============================================================
+     JAVASCRIPT
+============================================================ -->
+<script>
+/* ================================================================
+   DATA — Website database
+================================================================ */
+const SITES = [
+  {
+    id: 1,
+    url: "pune-food-guide.com",
+    title: "Pune Food Guide",
+    text: "Where to eat in Pune - vada pav and biryani and pizza",
+    linksTo: [2],      // outgoing links
+    color: "#4285f4"
+  },
+  {
+    id: 2,
+    url: "best-pizza-pune.com",
+    title: "Best Pizza Pune",
+    text: "Fresh wood-fired pizza made daily - try our cheese pizza",
+    linksTo: [1, 3],
+    color: "#ea4335"
+  },
+  {
+    id: 3,
+    url: "college-canteen-blog.com",
+    title: "College Canteen Blog",
+    text: "Student reviews of canteen food and chai and Friday pizza",
+    linksTo: [2, 4],
+    color: "#fbbc04"
+  },
+  {
+    id: 4,
+    url: "pizza-recipes-home.com",
+    title: "Pizza Recipes Home",
+    text: "Make pizza at home - pizza dough and pizza sauce",
+    linksTo: [2, 5],
+    color: "#34a853"
+  },
+  {
+    id: 5,
+    url: "cheap-eats-pune.com",
+    title: "Cheap Eats Pune",
+    text: "Good food under 100 rupees - misal and dosa and pizza slices",
+    linksTo: [2],
+    color: "#7c3aed"
+  },
+  {
+    id: 6,
+    url: "pizza-pizza-pizza.com",
+    title: "Pizza Pizza Pizza",
+    text: "pizza pizza pizza pizza pizza pizza pizza pizza pizza pizza",
+    linksTo: [1],
+    color: "#f97316"
+  }
+];
+
+/* ================================================================
+   PAGERANK — Iterative calculation
+================================================================ */
+function computePageRank(sites, d = 0.85, maxIter = 200, tol = 1e-8) {
+  const n = sites.length;
+  // Map id → 0-based index
+  const idx = {};
+  sites.forEach((s, i) => idx[s.id] = i);
+
+  // Build incoming links map: for each site, who links to it?
+  const inLinks = sites.map(() => []);   // inLinks[i] = list of site objects linking to i
+  sites.forEach(s => {
+    s.linksTo.forEach(toId => {
+      inLinks[idx[toId]].push(s);
+    });
+  });
+
+  // Identify sink nodes (no outgoing links) — handled via dangling node mass
+  const isSink = sites.map(s => s.linksTo.length === 0);
+
+  let pr = new Array(n).fill(1 / n);    // initialise equally
+
+  for (let iter = 0; iter < maxIter; iter++) {
+    // Handle dangling mass: sinks distribute their rank equally to all pages
+    const danglingMass = pr.reduce((sum, val, i) => isSink[i] ? sum + val : sum, 0);
+
+    const newPr = new Array(n).fill(0);
+    for (let i = 0; i < n; i++) {
+      let sum = 0;
+      inLinks[i].forEach(src => {
+        sum += pr[idx[src.id]] / src.linksTo.length;
+      });
+      // Distribute dangling mass equally across all nodes
+      newPr[i] = (1 - d) / n + d * (sum + danglingMass / n);
+    }
+
+    // Check convergence
+    const diff = newPr.reduce((acc, val, i) => acc + Math.abs(val - pr[i]), 0);
+    pr = newPr;
+    if (diff < tol) break;
+  }
+
+  return pr;   // indexed same order as SITES
+}
+
+// Pre-compute once
+const PR_SCORES = computePageRank(SITES);
+
+/* ================================================================
+   KEYWORD FREQUENCY — Old Google method
+================================================================ */
+function countKeyword(text, keyword) {
+  if (!keyword) return 0;
+  const kw = keyword.toLowerCase().trim();
+  if (!kw) return 0;
+  const words = text.toLowerCase().split(/\W+/);
+  return words.filter(w => w === kw).length;
+}
+
+/* ================================================================
+   SEARCH STATE
+================================================================ */
+let currentMode = 'old';   // 'old' | 'rank' | 'both'
+
+function setMode(mode) {
+  currentMode = mode;
+  document.getElementById('btnOld') .classList.toggle('active', mode === 'old'  || mode === 'both');
+  document.getElementById('btnRank').classList.toggle('active', mode === 'rank' || mode === 'both');
+  document.getElementById('btnBoth').classList.toggle('active', mode === 'both');
+  if (document.getElementById('searchInput').value.trim()) runSearch();
+}
+
+function quickSearch(kw) {
+  document.getElementById('searchInput').value = kw;
+  runSearch();
+}
+
+document.getElementById('searchInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') runSearch();
+});
+
+/* ================================================================
+   MAIN SEARCH FUNCTION
+================================================================ */
+function runSearch() {
+  const raw = document.getElementById('searchInput').value.trim();
+  const kw  = raw.toLowerCase();
+
+  // Build keyword counts
+  const withCounts = SITES.map((s, i) => ({
+    ...s,
+    kwCount: countKeyword(s.text, kw),
+    prScore: PR_SCORES[i]
+  }));
+
+  // Old ranking: by keyword count desc, then by id asc
+  const oldRanked = [...withCounts]
+    .sort((a, b) => b.kwCount - a.kwCount || a.id - b.id);
+
+  // PageRank ranking: by PR desc
+  const prRanked = [...withCounts]
+    .sort((a, b) => b.prScore - a.prScore);
+
+  // Show section
+  const sec = document.getElementById('resultsSection');
+  sec.style.display = 'block';
+  document.getElementById('resultsHeading').textContent =
+    `Results for "${raw || '(all pages)'}"`;
+
+  // Build panels based on mode
+  const grid = document.getElementById('resultsGrid');
+  grid.innerHTML = '';
+
+  if (currentMode === 'old' || currentMode === 'both') {
+    grid.appendChild(buildOldPanel(oldRanked, kw));
+  }
+  if (currentMode === 'rank' || currentMode === 'both') {
+    grid.appendChild(buildPrPanel(prRanked, kw));
+  }
+
+  // Update comparison table
+  buildComparisonTable(withCounts, oldRanked, prRanked, kw);
+
+  // Scroll to results smoothly
+  sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/* ================================================================
+   RESULTS PANEL BUILDERS
+================================================================ */
+function highlightKeyword(text, kw) {
+  if (!kw) return escapeHtml(text);
+  const re = new RegExp(`\\b(${escapeRegex(kw)})\\b`, 'gi');
+  return escapeHtml(text).replace(re, '<span class="kw-highlight">$1</span>');
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function escapeRegex(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function incomingLinks(siteId) {
+  return SITES.filter(s => s.linksTo.includes(siteId));
+}
+
+function buildOldPanel(ranked, kw) {
+  const panel = document.createElement('div');
+  panel.className = 'results-panel old-panel fade-in';
+  panel.innerHTML = `
+    <div class="panel-header">
+      <span style="font-size:1.2rem">🕰️</span>
+      <span class="panel-title" style="color:var(--red)">Old Google — Keyword Count</span>
+      <span class="panel-desc">Ranked by frequency</span>
+    </div>
+    <div class="result-list">
+      ${ranked.map((s, rank) => `
+        <div class="result-item" onclick="highlightNode(${s.id})">
+          <div class="rank-badge">${rank + 1}</div>
+          <div class="result-body">
+            <div class="result-url">🌐 ${s.url}</div>
+            <div class="result-title">${s.title}</div>
+            <div class="result-snippet">${highlightKeyword(s.text, kw)}</div>
+            <div class="result-meta">
+              <span class="meta-tag meta-kw">🔑 ${s.kwCount} keyword hit${s.kwCount !== 1 ? 's' : ''}</span>
+              ${s.id === 6 ? '<span class="meta-tag meta-spam">⚠️ Keyword spam!</span>' : ''}
+              <span class="meta-tag meta-link">🔗 ${s.linksTo.length} out-links</span>
+            </div>
+            <div style="font-size:.75rem;color:var(--muted);margin-top:5px;">
+              ${kw ? `Ranks here because "${kw}" appears ${s.kwCount}× in the text.` : 'Enter a keyword to see ranking reason.'}
+            </div>
+          </div>
+        </div>
+      `).join('')}
+    </div>`;
+  return panel;
+}
+
+function buildPrPanel(ranked, kw) {
+  const maxPr = Math.max(...PR_SCORES);
+  const panel = document.createElement('div');
+  panel.className = 'results-panel rank-panel fade-in';
+  panel.innerHTML = `
+    <div class="panel-header">
+      <span style="font-size:1.2rem">🚀</span>
+      <span class="panel-title" style="color:var(--green)">PageRank Google</span>
+      <span class="panel-desc">Ranked by authority</span>
+    </div>
+    <div class="result-list">
+      ${ranked.map((s, rank) => {
+        const incoming = incomingLinks(s.id);
+        const barW = Math.round((s.prScore / maxPr) * 100);
+        return `
+        <div class="result-item" onclick="highlightNode(${s.id})">
+          <div class="rank-badge">${rank + 1}</div>
+          <div class="result-body">
+            <div class="result-url">🌐 ${s.url}</div>
+            <div class="result-title">${s.title}</div>
+            <div class="result-snippet">${highlightKeyword(s.text, kw)}</div>
+            <div class="result-meta">
+              <span class="meta-tag meta-pr">⭐ PR: ${s.prScore.toFixed(4)}</span>
+              <span class="meta-tag meta-link">⬅️ ${incoming.length} in-links</span>
+              <span class="meta-tag meta-link">➡️ ${s.linksTo.length} out-links</span>
+            </div>
+            <div class="pr-bar-wrap" style="margin-top:7px;">
+              <div class="pr-bar-bg"><div class="pr-bar-fill" style="width:${barW}%"></div></div>
+              <span style="font-size:.72rem;color:var(--muted);min-width:38px;">${s.prScore.toFixed(3)}</span>
+            </div>
+            <div style="font-size:.75rem;color:var(--muted);margin-top:5px;">
+              Linked by: ${incoming.length ? incoming.map(x => x.url).join(', ') : 'nobody (low authority)'}
+            </div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  return panel;
+}
+
+/* ================================================================
+   COMPARISON TABLE
+================================================================ */
+function buildComparisonTable(sites, oldRanked, prRanked, kw) {
+  const container = document.getElementById('compDashboard');
+
+  const maxPr  = Math.max(...sites.map(s => s.prScore));
+  const maxKw  = Math.max(...sites.map(s => s.kwCount), 1);
+
+  // Determine biggest movers
+  const movements = sites.map(s => {
+    const oldPos  = oldRanked.findIndex(r => r.id === s.id) + 1;
+    const prPos   = prRanked .findIndex(r => r.id === s.id) + 1;
+    return { id: s.id, diff: Math.abs(oldPos - prPos) };
+  });
+  const maxMove = Math.max(...movements.map(m => m.diff));
+
+  container.innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Website</th>
+          <th>Old Rank</th>
+          <th>PR Rank</th>
+          <th>Keyword Hits${kw ? ` (${kw})` : ''}</th>
+          <th>PageRank Score</th>
+          <th>Rank Change</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${sites.map(s => {
+          const oldPos = oldRanked.findIndex(r => r.id === s.id) + 1;
+          const prPos  = prRanked .findIndex(r => r.id === s.id) + 1;
+          const delta  = oldPos - prPos;    // positive = moved up in PR
+          const move   = movements.find(m => m.id === s.id).diff;
+          const isHot  = move === maxMove && move > 0;
+
+          let changeBadge;
+          if (delta > 0)
+            changeBadge = `<span class="change-badge change-up">▲ ${delta} up</span>`;
+          else if (delta < 0)
+            changeBadge = `<span class="change-badge change-down">▼ ${Math.abs(delta)} down</span>`;
+          else
+            changeBadge = `<span class="change-badge change-same">─ same</span>`;
+
+          const kwBarW = Math.round((s.kwCount / maxKw) * 100);
+          const prBarW = Math.round((s.prScore / maxPr) * 100);
+
+          return `
+          <tr class="${isHot ? 'highlight-row' : ''}">
+            <td><strong>${s.id}</strong></td>
+            <td>
+              <div style="font-weight:600;font-size:.88rem;">${s.title}</div>
+              <div style="font-size:.73rem;color:var(--muted);">${s.url}</div>
+            </td>
+            <td style="text-align:center;font-weight:700;">${oldPos}</td>
+            <td style="text-align:center;font-weight:700;">${prPos}</td>
+            <td>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <div style="flex:1;height:6px;background:var(--border);border-radius:999px;overflow:hidden;">
+                  <div style="width:${kwBarW}%;height:100%;background:var(--red);border-radius:999px;"></div>
+                </div>
+                <span style="min-width:16px;font-size:.8rem;">${s.kwCount}</span>
+              </div>
+            </td>
+            <td>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <div style="flex:1;height:6px;background:var(--border);border-radius:999px;overflow:hidden;">
+                  <div style="width:${prBarW}%;height:100%;background:var(--green);border-radius:999px;"></div>
+                </div>
+                <span style="min-width:46px;font-size:.8rem;">${s.prScore.toFixed(4)}</span>
+              </div>
+            </td>
+            <td>${changeBadge} ${isHot ? '🔥' : ''}</td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>`;
+}
+
+/* ================================================================
+   PAGERANK VISUALISER CARDS
+================================================================ */
+function buildPrVisGrid() {
+  const maxPr = Math.max(...PR_SCORES);
+  const grid  = document.getElementById('prVisGrid');
+
+  const sorted = [...SITES].map((s, i) => ({ ...s, pr: PR_SCORES[i] }))
+                           .sort((a, b) => b.pr - a.pr);
+
+  grid.innerHTML = sorted.map((s, rank) => `
+    <div class="pr-node-card" onclick="highlightNode(${s.id})"
+         style="border-color: ${rank === 0 ? 'var(--green)' : 'var(--border)'};">
+      <div class="pr-node-num" style="background:${s.color}">${s.id}</div>
+      <div class="pr-node-domain">${s.url}</div>
+      <div class="pr-node-score">${s.pr.toFixed(4)}</div>
+      <div class="pr-node-label">PageRank score</div>
+      <div style="margin-top:8px;font-size:.7rem;color:var(--muted);">
+        Rank #${rank + 1} of ${SITES.length}
+      </div>
+    </div>
+  `).join('');
+}
+buildPrVisGrid();
+
+/* ================================================================
+   INITIAL COMPARISON TABLE (no keyword)
+================================================================ */
+(function initCompTable() {
+  const all = SITES.map((s, i) => ({ ...s, kwCount: 0, prScore: PR_SCORES[i] }));
+  const oldR = [...all].sort((a, b) => a.id - b.id);
+  const prR  = [...all].sort((a, b) => b.prScore - a.prScore);
+  buildComparisonTable(all, oldR, prR, '');
+})();
+
+/* ================================================================
+   GRAPH — SVG Network Visualisation
+================================================================ */
+
+// Fixed node positions (x, y) on a 760×480 canvas
+const NODE_POS = {
+  1: { x: 200, y: 120 },
+  2: { x: 420, y: 90  },
+  3: { x: 600, y: 200 },
+  4: { x: 560, y: 370 },
+  5: { x: 350, y: 400 },
+  6: { x: 130, y: 320 }
+};
+const NODE_R = 32;
+
+let selectedNode = null;
+
+function buildGraph() {
+  const svg  = document.getElementById('graphSvg');
+  const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+
+  // Arrow markers
+  ['default', 'highlight', 'dimmed'].forEach(type => {
+    const colors = { default: '#34a853', highlight: '#ea4335', dimmed: '#ccc' };
+    const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+    marker.setAttribute('id', `arrow-${type}`);
+    marker.setAttribute('markerWidth', '10');
+    marker.setAttribute('markerHeight', '10');
+    marker.setAttribute('refX', '8');
+    marker.setAttribute('refY', '3');
+    marker.setAttribute('orient', 'auto');
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', 'M0,0 L0,6 L9,3 Z');
+    path.setAttribute('fill', colors[type]);
+    marker.appendChild(path);
+    defs.appendChild(marker);
+  });
+  svg.appendChild(defs);
+
+  // ---- EDGES ----
+  const edgeGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  edgeGroup.setAttribute('id', 'edgeGroup');
+  SITES.forEach(src => {
+    src.linksTo.forEach(toId => {
+      const p1 = NODE_POS[src.id];
+      const p2 = NODE_POS[toId];
+      // Adjust endpoint to stop at node circumference
+      const dx = p2.x - p1.x;
+      const dy = p2.y - p1.y;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      const ex = p2.x - (dx / dist) * (NODE_R + 4);
+      const ey = p2.y - (dy / dist) * (NODE_R + 4);
+      const sx = p1.x + (dx / dist) * (NODE_R + 4);
+      const sy = p1.y + (dy / dist) * (NODE_R + 4);
+
+      // Slight curve offset for bidirectional edges
+      const isBidi = SITES.find(s => s.id === toId)?.linksTo.includes(src.id);
+      let d;
+      if (isBidi) {
+        const mx = (sx + ex) / 2;
+        const my = (sy + ey) / 2;
+        const nx = -dy / dist * 30;
+        const ny =  dx / dist * 30;
+        d = `M${sx},${sy} Q${mx + nx},${my + ny} ${ex},${ey}`;
+      } else {
+        d = `M${sx},${sy} L${ex},${ey}`;
+      }
+
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', d);
+      path.setAttribute('stroke', '#34a853');
+      path.setAttribute('stroke-width', '2');
+      path.setAttribute('fill', 'none');
+      path.setAttribute('marker-end', 'url(#arrow-default)');
+      path.setAttribute('opacity', '0.7');
+      path.setAttribute('class', `edge edge-from-${src.id} edge-to-${toId}`);
+      path.style.transition = 'stroke .2s, opacity .2s';
+      edgeGroup.appendChild(path);
+    });
+  });
+  svg.appendChild(edgeGroup);
+
+  // ---- NODES ----
+  const nodeGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  nodeGroup.setAttribute('id', 'nodeGroup');
+  SITES.forEach(s => {
+    const { x, y } = NODE_POS[s.id];
+    const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    g.setAttribute('class', `node node-${s.id}`);
+    g.style.cursor = 'pointer';
+
+    // Shadow circle
+    const shadow = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    shadow.setAttribute('cx', x); shadow.setAttribute('cy', y + 3);
+    shadow.setAttribute('r', NODE_R); shadow.setAttribute('fill', 'rgba(0,0,0,0.12)');
+    g.appendChild(shadow);
+
+    // Main circle
+    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    circle.setAttribute('cx', x); circle.setAttribute('cy', y);
+    circle.setAttribute('r', NODE_R);
+    circle.setAttribute('fill', s.color);
+    circle.setAttribute('stroke', '#fff');
+    circle.setAttribute('stroke-width', '3');
+    circle.setAttribute('class', `node-circle-${s.id}`);
+    g.appendChild(circle);
+
+    // Label: site number
+    const numText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    numText.setAttribute('x', x); numText.setAttribute('y', y + 5);
+    numText.setAttribute('text-anchor', 'middle');
+    numText.setAttribute('font-size', '16');
+    numText.setAttribute('font-weight', '800');
+    numText.setAttribute('fill', '#fff');
+    numText.textContent = s.id;
+    g.appendChild(numText);
+
+    // Domain label below circle
+    const domText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    domText.setAttribute('x', x); domText.setAttribute('y', y + NODE_R + 16);
+    domText.setAttribute('text-anchor', 'middle');
+    domText.setAttribute('font-size', '10');
+    domText.setAttribute('fill', '#5f6368');
+    domText.textContent = s.url.length > 20 ? s.url.slice(0,18) + '…' : s.url;
+    g.appendChild(domText);
+
+    g.addEventListener('click', () => highlightNode(s.id));
+    nodeGroup.appendChild(g);
+  });
+  svg.appendChild(nodeGroup);
+
+  // Add PR score labels near nodes (small text)
+  const maxPr = Math.max(...PR_SCORES);
+  SITES.forEach((s, i) => {
+    const { x, y } = NODE_POS[s.id];
+    const prLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    prLabel.setAttribute('x', x);
+    prLabel.setAttribute('y', y - NODE_R - 7);
+    prLabel.setAttribute('text-anchor', 'middle');
+    prLabel.setAttribute('font-size', '10');
+    prLabel.setAttribute('fill', '#5f6368');
+    prLabel.setAttribute('font-weight', '600');
+    prLabel.textContent = `PR: ${PR_SCORES[i].toFixed(3)}`;
+    svg.appendChild(prLabel);
+  });
+}
+
+function highlightNode(nodeId) {
+  selectedNode = nodeId;
+  const site = SITES.find(s => s.id === nodeId);
+  const incoming = incomingLinks(nodeId);
+  const prIdx = SITES.findIndex(s => s.id === nodeId);
+
+  // Reset all edges
+  document.querySelectorAll('.edge').forEach(e => {
+    e.setAttribute('stroke', '#ccc');
+    e.setAttribute('opacity', '0.4');
+    e.setAttribute('marker-end', 'url(#arrow-dimmed)');
+    e.setAttribute('stroke-width', '1.5');
+  });
+
+  // Highlight outgoing edges (green)
+  site.linksTo.forEach(toId => {
+    document.querySelectorAll(`.edge-from-${nodeId}`).forEach(e => {
+      e.setAttribute('stroke', '#34a853');
+      e.setAttribute('opacity', '1');
+      e.setAttribute('marker-end', 'url(#arrow-default)');
+      e.setAttribute('stroke-width', '2.5');
+    });
+  });
+
+  // Highlight incoming edges (red)
+  incoming.forEach(src => {
+    document.querySelectorAll(`.edge-from-${src.id}.edge-to-${nodeId}`).forEach(e => {
+      e.setAttribute('stroke', '#ea4335');
+      e.setAttribute('opacity', '1');
+      e.setAttribute('marker-end', 'url(#arrow-highlight)');
+      e.setAttribute('stroke-width', '2.5');
+    });
+  });
+
+  // Reset node circles
+  SITES.forEach(s => {
+    const c = document.querySelector(`.node-circle-${s.id}`);
+    if (c) {
+      c.setAttribute('stroke', '#fff');
+      c.setAttribute('stroke-width', '3');
+      c.setAttribute('opacity', '0.7');
+    }
+  });
+  // Highlight selected
+  const selCircle = document.querySelector(`.node-circle-${nodeId}`);
+  if (selCircle) {
+    selCircle.setAttribute('stroke', '#fff');
+    selCircle.setAttribute('stroke-width', '5');
+    selCircle.setAttribute('opacity', '1');
+  }
+  // Connected nodes
+  [...site.linksTo, ...incoming.map(s => s.id)].forEach(cid => {
+    const cc = document.querySelector(`.node-circle-${cid}`);
+    if (cc) cc.setAttribute('opacity', '1');
+  });
+
+  // Info panel
+  document.getElementById('nodeInfo').innerHTML = `
+    <strong>${site.title}</strong> (${site.url}) · PageRank = <strong>${PR_SCORES[prIdx].toFixed(4)}</strong><br>
+    <span style="color:var(--red)">⬅️ Incoming links (${incoming.length}):</span>
+    ${incoming.length ? incoming.map(s => `<strong>${s.url}</strong>`).join(', ') : '<em>none</em>'}
+    &nbsp;|&nbsp;
+    <span style="color:var(--green)">➡️ Outgoing links (${site.linksTo.length}):</span>
+    ${site.linksTo.length ? site.linksTo.map(id => `<strong>${SITES.find(s=>s.id===id).url}</strong>`).join(', ') : '<em>none</em>'}
+    <br>
+    <span style="color:var(--muted);font-size:.8rem;">
+      Content: "${site.text}"
+    </span>
+  `;
+}
+
+buildGraph();
+
+// Auto-highlight site 2 on load
+setTimeout(() => highlightNode(2), 600);
+</script>
+</body>
+</html>
